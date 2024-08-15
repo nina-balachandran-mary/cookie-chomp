@@ -15,14 +15,36 @@ document.addEventListener('DOMContentLoaded', () => {
     chaos: 1000,
   }
 
+  const startScreen = document.getElementsByClassName('start-screen')[0]
   const cookieArena = document.getElementById('cookie-arena');
   const cookieMonsterImage = document.getElementById('cookie-monster');
   const scoreCard = document.getElementById('score');
   const difficultyCard = document.getElementById('difficulty');
+
   let score = 0;
+  /* Default difficulty set to Easy */
+  let difficultyLevel = 'easy'
 
   scoreCard.innerHTML = score;
   difficultyCard.innerHTML = 'Easy';
+
+
+  /* Initialize game with chosen difficulty */
+  const difficultySelect = document.getElementById('difficulty-select');
+  difficultySelect.addEventListener('change', (e) => {
+    e.preventDefault();
+    difficultyLevel = difficultySelect.value
+    difficultyCard.innerHTML = difficultyLevel.charAt(0).toUpperCase() + difficultyLevel.slice(1);
+  })
+
+  const button = document.getElementsByClassName('start-button')[0]
+  button.addEventListener('click', (e) => {
+    e.preventDefault();
+    startScreen.classList.add('hidden')
+    cookieArena.classList.remove('hidden')
+  })
+
+
 
   /* Initialize cookie images, attach animation event listener and append cookie to DOM */
   const cookieInit = () => {
@@ -34,17 +56,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cookie.addEventListener('animationend',(e) => {
       e.preventDefault();
-      if(cookie.style.left >= cookieMonsterImage.style.left && cookie.style.right <= cookieMonsterImage.style.right) {
+      const cookieBounds = cookie.getBoundingClientRect();
+      const monsterBounds = cookieMonsterImage.getBoundingClientRect();
+      if(cookieBounds.x >= monsterBounds.x - cookieMonsterImage.width
+        && cookieBounds.x <= monsterBounds.x + cookieMonsterImage.width) {
         // score condition
         score += 1
         scoreCard.innerHTML = score;
-        // console.log(cookieMonsterImage.width, cookieMonsterImage.height)
+
       }
       cookieArena.removeChild(cookie)
     })
 
     cookieArena.appendChild(cookie);
     return cookie;
+  }
+
+  if(!cookieArena) {
+    return;
   }
 
   cookieArena.addEventListener('mousemove', (e) => {
@@ -57,20 +86,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const interval = setInterval(() => {
     let cookiesLaunched = document.querySelectorAll('.cookie');
-    if (cookiesLaunched.length < difficulty['easy'] ?? 3) {
+    if (cookiesLaunched.length < difficulty[difficultyLevel] ?? 3) {
       cookieInit()
     }
-  }, time['easy'])
+  }, time[difficultyLevel])
 
   const gameReset = () => {
     score = 0;
     scoreCard.innerHTML = score;
+    cookieArena.classList.add('hidden')
+    startScreen.classList.remove('hidden')
   }
 
   document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape') {
       clearInterval(interval);
-      alert('Game has ended')
+      alert('Game has ended. Your score was ' + score)
       gameReset()
       document.querySelectorAll('.cookie').forEach((cookie) => {
         cookieArena.removeChild(cookie)
