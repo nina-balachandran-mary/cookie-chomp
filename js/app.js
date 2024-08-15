@@ -42,54 +42,65 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     startScreen.classList.add('hidden')
     cookieArena.classList.remove('hidden')
+    launchCookies()
   })
 
+  const launchCookies = () => {
+    /* Initialize cookie images, attach animation event listener and append cookie to DOM */
+    const cookieInit = () => {
+      // create a new image of cookie and append to DOM
+      let cookie = document.createElement('img');
+      cookie.src = './img/cookie.svg'
+      cookie.className = 'cookie';
+      cookie.style.left = Math.round((Math.random() * (1500 - 32) + 32)) + 'px'
 
+      cookie.addEventListener('animationend',(e) => {
+        e.preventDefault();
+        const cookieBounds = cookie.getBoundingClientRect();
+        const monsterBounds = cookieMonsterImage.getBoundingClientRect();
+        if(cookieBounds.x >= monsterBounds.x - cookieMonsterImage.width
+          && cookieBounds.x <= monsterBounds.x + cookieMonsterImage.width) {
+          // score condition
+          score += 1
+          scoreCard.innerHTML = score;
 
-  /* Initialize cookie images, attach animation event listener and append cookie to DOM */
-  const cookieInit = () => {
-    // create a new image of cookie and append to DOM
-    let cookie = document.createElement('img');
-    cookie.src = './img/cookie.svg'
-    cookie.className = 'cookie';
-    cookie.style.left = Math.round((Math.random() * (1500 - 32) + 32)) + 'px'
+        }
+        cookieArena.removeChild(cookie)
+      })
 
-    cookie.addEventListener('animationend',(e) => {
+      cookieArena.appendChild(cookie);
+      return cookie;
+    }
+
+    if(!cookieArena) {
+      return;
+    }
+
+    cookieArena.addEventListener('mousemove', (e) => {
       e.preventDefault();
-      const cookieBounds = cookie.getBoundingClientRect();
-      const monsterBounds = cookieMonsterImage.getBoundingClientRect();
-      if(cookieBounds.x >= monsterBounds.x - cookieMonsterImage.width
-        && cookieBounds.x <= monsterBounds.x + cookieMonsterImage.width) {
-        // score condition
-        score += 1
-        scoreCard.innerHTML = score;
-
-      }
-      cookieArena.removeChild(cookie)
+      let leftPos = e.clientX - (cookieMonsterImage.width / 4) - 32
+      let rightPos = cookieArena.width - (cookieMonsterImage.width / 4) - 32 // 2em border approx
+      cookieMonsterImage.style.left = leftPos > 0 ? leftPos + 'px' : '0';
     })
 
-    cookieArena.appendChild(cookie);
-    return cookie;
+    const interval = setInterval(() => {
+      let cookiesLaunched = document.querySelectorAll('.cookie');
+      if (cookiesLaunched.length < difficulty[difficultyLevel] ?? 3) {
+        cookieInit()
+      }
+    }, time[difficultyLevel])
+
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') {
+        clearInterval(interval);
+        alert('Game has ended. Your score was ' + score)
+        gameReset()
+        document.querySelectorAll('.cookie').forEach((cookie) => {
+          cookieArena.removeChild(cookie)
+        })
+      }
+    });
   }
-
-  if(!cookieArena) {
-    return;
-  }
-
-  cookieArena.addEventListener('mousemove', (e) => {
-    e.preventDefault();
-    let leftPos = e.clientX - (cookieMonsterImage.width / 4) - 32
-    // TODO: Check the right limit
-    let rightPos = cookieArena.width - (cookieMonsterImage.width / 4) - 32 // 2em border approx
-    cookieMonsterImage.style.left = leftPos > 0 ? leftPos + 'px' : '0';
-  })
-
-  const interval = setInterval(() => {
-    let cookiesLaunched = document.querySelectorAll('.cookie');
-    if (cookiesLaunched.length < difficulty[difficultyLevel] ?? 3) {
-      cookieInit()
-    }
-  }, time[difficultyLevel])
 
   const gameReset = () => {
     score = 0;
@@ -97,15 +108,4 @@ document.addEventListener('DOMContentLoaded', () => {
     cookieArena.classList.add('hidden')
     startScreen.classList.remove('hidden')
   }
-
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape') {
-      clearInterval(interval);
-      alert('Game has ended. Your score was ' + score)
-      gameReset()
-      document.querySelectorAll('.cookie').forEach((cookie) => {
-        cookieArena.removeChild(cookie)
-      })
-    }
-  });
 });
